@@ -5,8 +5,8 @@ source "$HOME/.config/ml4w/scripts/ml4w-notification-handler"
 APP_NAME="System"
 NOTIFICATION_ICON="battery-low-symbolic"
 
-BAT=$(command ls -d /sys/class/power_supply/BAT* 2>/dev/null | head -n 1)
-if [[ -z "$BAT" ]]; then
+# FreeBSD ACPI battery (acpiconf). Exit if no battery is present.
+if ! acpiconf -i 0 >/dev/null 2>&1; then
     exit 0
 fi
 
@@ -14,10 +14,14 @@ NOTIFIED_20=false
 NOTIFIED_15=false
 
 while true; do
-    CAPACITY=$(cat "$BAT/capacity")
-    STATUS=$(cat "$BAT/status")
+    CAPACITY=$(acpiconf -i 0 2>/dev/null | awk -F: '/Remaining capacity/{gsub(/[ %\t]/,"",$2); print $2}')
+    STATUS=$(acpiconf -i 0 2>/dev/null | awk -F: '/^State:/{print tolower($2)}' | tr -d '[:space:]')
 
-    if [[ "$STATUS" == "Discharging" ]]; then
+    if [[ -z "$CAPACITY" ]]; then
+        exit 0
+    fi
+
+    if [[ "$STATUS" == "discharging" ]]; then
         if [[ $CAPACITY -le 15 && $NOTIFIED_15 == false ]]; then
             notify_user \
                 --u "critical" \

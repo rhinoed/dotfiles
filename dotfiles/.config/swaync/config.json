@@ -66,15 +66,15 @@
           "label": "",
           "type": "toggle",
           "active": true,
-          "command": "sh -c '[[ $SWAYNC_TOGGLE_STATE == true ]] && nmcli radio wifi on || nmcli radio wifi off'",
-          "update-command": "sh -c '[[ $(nmcli r wifi) == \"enabled\" ]] && echo true || echo false'"
+          "command": "sh -c '~/.config/ml4w/scripts/ml4w-wifi-toggle'",
+          "update-command": "sh -c '[[ $(~/.config/ml4w/scripts/ml4w-wifi-status) == \"enabled\" ]] && echo true || echo false'"
         },
         {
           "label": "",
           "type": "toggle",
           "active": true,
-          "command": "rfkill toggle bluetooth",
-          "update-command": ""
+          "command": "sh -c 'if service bluetooth status >/dev/null 2>&1; then sudo service bluetooth onestop; else sudo service bluetooth onestart; fi'",
+          "update-command": "sh -c 'service bluetooth status >/dev/null 2>&1 && echo true || echo false'"
         },
         {
           "label": "󰕾",

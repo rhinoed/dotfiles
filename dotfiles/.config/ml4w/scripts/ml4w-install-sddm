@@ -7,41 +7,31 @@ if ! command -v gum &> /dev/null; then
     exit 1
 fi
 
-# List of conflicting Display Managers to check
-CONFLICTING_DMS="gdm lightdm lxdm xdm mdm slim wdm"
+# List of conflicting Display Managers to check (FreeBSD rc.conf services)
+CONFLICTING_DMS="xdm gdm lightdm slim lxdm wdm sddm"
 
-# --- 2. OS DETECTION (By Package Manager) ---
-
-if command -v pacman &> /dev/null; then
-    DISTRO="Arch Linux"
-    INSTALL_CMD="sudo pacman -S --noconfirm sddm qt6-svg qt6-virtualkeyboard qt6-multimedia-ffmpeg"
-    CHECK_PKG_CMD="pacman -Qi sddm"
-elif command -v dnf &> /dev/null; then
-    DISTRO="Fedora"
-    INSTALL_CMD="sudo dnf install -y sddm qt6-qtsvg qt6-qtvirtualkeyboard qt6-qtmultimedia"
-    CHECK_PKG_CMD="rpm -q sddm"
-elif command -v zypper &> /dev/null; then
-    DISTRO="openSUSE Tumbleweed"
-    INSTALL_CMD="sudo zypper install -y sddm-qt6 libQt6Svg6 qt6-virtualkeyboard qt6-virtualkeyboard-imports qt6-multimedia qt6-multimedia-imports"
-    CHECK_PKG_CMD="rpm -q sddm"
-else
-    echo "ERROR: Unsupported package manager"
-    exit 1
-fi
+SDDM_CONF="/usr/local/etc/sddm.conf"
+SDDM_THEMES="/usr/local/share/sddm/themes"
+DISTRO="FreeBSD"
+INSTALL_CMD="sudo pkg install -y sddm qt6-svg qt6-virtualkeyboard qt6-multimedia qt6ct qt6-wayland"
+CHECK_PKG_CMD="pkg info -e sddm"
 
 primarycolor=$(cat ~/.config/ml4w/colors/primary)
 onsurfacecolor=$(cat ~/.config/ml4w/colors/onsurface)
 onprimarycolor=$(cat ~/.config/ml4w/colors/onprimary)
 
-# --- 3. HELPER FUNCTIONS ---
+# --- 2. HELPER FUNCTIONS ---
 
 check_sddm_installed() {
     $CHECK_PKG_CMD &> /dev/null
 }
 
 check_sddm_active() {
-    # Checks if a display manager is active
-    systemctl is-active --quiet display-manager
+    # Active when SDDM is running or enabled in rc.conf
+    if pgrep -x sddm >/dev/null 2>&1; then
+        return 0
+    fi
+    sysrc -n sddm_enable 2>/dev/null | grep -qi yes
 }
 
 install_sddm() {
@@ -51,10 +41,9 @@ install_sddm() {
 
 disable_other_dms() {
     for dm in $CONFLICTING_DMS; do
-        # Only disable the service, DO NOT stop it.
-        # Stopping it would kill the current GUI session immediately.
-        if systemctl is-enabled --quiet "$dm" 2>/dev/null; then
-             echo ":: Disabling conflicting DM: $dm..." && sudo systemctl disable "$dm"
+        [ "$dm" = "sddm" ] && continue
+        if sysrc -n "${dm}_enable" 2>/dev/null | grep -qi yes; then
+            echo ":: Disabling conflicting DM: $dm..." && sudo sysrc "${dm}_enable=NO"
         fi
     done
 }
@@ -66,19 +55,19 @@ activate_sddm() {
     fi
 
     disable_other_dms
-    
-    echo ":: Enabling SDDM Service..." && if sudo systemctl enable sddm; then
+
+    echo ":: Enabling SDDM Service..." && if sudo sysrc sddm_enable="YES"; then
         echo ":: SDDM Service Enabled."
         echo ":: Please reboot your system to apply changes."
     else
-        echo "ERROR: Failed to enable SDDM systemd service."
+        echo "ERROR: Failed to enable SDDM in /etc/rc.conf."
         exit 1
     fi
 }
 
 deactivate_sddm() {
     if ! sudo -v; then exit 1; fi
-    echo ":: Deactivating SDDM..." && sudo systemctl disable sddm
+    echo ":: Deactivating SDDM..." && sudo sysrc sddm_enable="NO"
     echo ":: SDDM has been deactivated. You are currently without an active Display Manager."
 }
 
@@ -93,8 +82,8 @@ install_theme() {
     git clone --depth 1 https://github.com/mylinuxforwork/ml4w-sddm $HOME/.cache/ml4w-tmp/ml4w-sddm
 
     echo ":: Copy theme to sddm folder..."
-    sudo mkdir -p /usr/share/sddm/themes/ml4w
-    sudo cp -rf $HOME/.cache/ml4w-tmp/ml4w-sddm/. /usr/share/sddm/themes/ml4w/
+    sudo mkdir -p "$SDDM_THEMES/ml4w"
+    sudo cp -rf $HOME/.cache/ml4w-tmp/ml4w-sddm/. "$SDDM_THEMES/ml4w/"
 
     apply_theme
 
@@ -105,37 +94,38 @@ install_theme() {
 }
 
 apply_theme () {
-    echo ":: Activating theme in /etc/sddm.conf..."
-    if [[ -f /etc/sddm.conf ]]; then
-        sudo cp -f /etc/sddm.conf /etc/sddm.conf.bak
-        echo ":: Backup for SDDM config saved in /etc/sddm.conf.bak"
+    echo ":: Activating theme in $SDDM_CONF..."
+    if [[ -f "$SDDM_CONF" ]]; then
+        sudo cp -f "$SDDM_CONF" "$SDDM_CONF.bak"
+        echo ":: Backup for SDDM config saved in $SDDM_CONF.bak"
 
-        if grep -Pzq '\[Theme\]\nCurrent=' /etc/sddm.conf; then
-            sudo sed -i '/^\[Theme\]$/{N;s/\(Current=\).*/\1ml4w/;}' /etc/sddm.conf
+        if grep -q '^\[Theme\]' "$SDDM_CONF"; then
+            sudo sed -i '' -E 's|^Current=.*|Current=ml4w|' "$SDDM_CONF"
+            if ! grep -q '^Current=' "$SDDM_CONF"; then
+                printf '[Theme]\nCurrent=ml4w\n' | sudo tee -a "$SDDM_CONF" >/dev/null
+            fi
         else
-            echo -e "\n[Theme]\nCurrent=ml4w" | sudo tee -a /etc/sddm.conf
+            printf '\n[Theme]\nCurrent=ml4w\n' | sudo tee -a "$SDDM_CONF" >/dev/null
         fi
 
-        if ! grep -Pzq 'InputMethod=qtvirtualkeyboard' /etc/sddm.conf; then
-            echo -e "\n[General]\nInputMethod=qtvirtualkeyboard" | sudo tee -a /etc/sddm.conf
+        if ! grep -q '^InputMethod=qtvirtualkeyboard' "$SDDM_CONF"; then
+            printf '\n[General]\nInputMethod=qtvirtualkeyboard\n' | sudo tee -a "$SDDM_CONF" >/dev/null
         fi
 
         # "InputMethod" was supposed to automatically set "QT_IM_MODULE", but it doesn't, so we manually export it.
-        if ! grep -Pzq 'GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/ml4w/components/,QT_IM_MODULE=qtvirtualkeyboard' /etc/sddm.conf; then
-            echo -e "\n[General]\nGreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/ml4w/components/,QT_IM_MODULE=qtvirtualkeyboard" | sudo tee -a /etc/sddm.conf
+        if ! grep -q 'GreeterEnvironment=.*QML2_IMPORT_PATH' "$SDDM_CONF"; then
+            printf 'GreeterEnvironment=QML2_IMPORT_PATH=%s/components/,QT_IM_MODULE=qtvirtualkeyboard\n' "$SDDM_THEMES" | sudo tee -a "$SDDM_CONF" >/dev/null
         fi
     else
-        echo -e "[Theme]\nCurrent=ml4w" | sudo tee -a /etc/sddm.conf
-        echo -e "\n[General]\nInputMethod=qtvirtualkeyboard" | sudo tee -a /etc/sddm.conf
-        echo -e "GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/ml4w/components/,QT_IM_MODULE=qtvirtualkeyboard" | sudo tee -a /etc/sddm.conf
+        printf '[Theme]\nCurrent=ml4w\n\n[General]\nInputMethod=qtvirtualkeyboard\nGreeterEnvironment=QML2_IMPORT_PATH=%s/components/,QT_IM_MODULE=qtvirtualkeyboard\n' "$SDDM_THEMES" | sudo tee "$SDDM_CONF" >/dev/null
     fi
 }
 
 copy_wallpaper_to_sddm() {
     echo ":: Copying current wallpaper to SDDM theme background..."
 
-    if ! command -v convert &> /dev/null; then
-        echo "ERROR: 'imagemagick' (convert command) is not installed. Please install it to use this feature."
+    if ! command -v magick &> /dev/null && ! command -v convert &> /dev/null; then
+        echo "ERROR: 'imagemagick' is not installed. Please install it to use this feature."
         return 1
     fi
 
@@ -152,7 +142,7 @@ copy_wallpaper_to_sddm() {
         return 1
     fi
 
-    DEST_WALLPAPER="/usr/share/sddm/themes/ml4w/backgrounds/ml4w.jpg"
+    DEST_WALLPAPER="$SDDM_THEMES/ml4w/backgrounds/ml4w.jpg"
 
     # Determine file type and convert if necessary
     MIME_TYPE=$(file --mime-type -b "$SOURCE_WALLPAPER")
@@ -162,7 +152,7 @@ copy_wallpaper_to_sddm() {
         cp "$SOURCE_WALLPAPER" "$TEMP_JPG"
         echo ":: Wallpaper is already JPEG. Copying directly."
     elif [[ "$MIME_TYPE" == "image/png" ]]; then
-        echo ":: Converting PNG wallpaper to JPEG..." && convert "$SOURCE_WALLPAPER" "$TEMP_JPG"
+        echo ":: Converting PNG wallpaper to JPEG..." && (magick "$SOURCE_WALLPAPER" "$TEMP_JPG" 2>/dev/null || convert "$SOURCE_WALLPAPER" "$TEMP_JPG")
         if [ $? -ne 0 ]; then
             echo "ERROR: Failed to convert wallpaper to JPEG."
             rm -f "$TEMP_JPG"
@@ -186,7 +176,7 @@ copy_wallpaper_to_sddm() {
     return 0
 }
 
-# --- 4. MAIN LOGIC ---
+# --- 3. MAIN LOGIC ---
 
 clear
 figlet -f smslant "ML4W SDDM"

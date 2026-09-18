@@ -3,7 +3,7 @@
 # Move nvim folder to .config
 NVIM_DIR="$HOME/.config/nvim"
 if [ -L $NVIM_DIR ]; then
-    current_link_target=$(realpath -m "$NVIM_DIR")
+    current_link_target=$(realpath "$NVIM_DIR")
     if [[ "$current_link_target" == *".mydotfiles"* ]]; then
         rm $NVIM_DIR
         echo "Symlink $NVIM_DIR removed"

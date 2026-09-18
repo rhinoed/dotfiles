@@ -107,8 +107,8 @@ echo ":: Starting Folder Sync Daemon for $project_name"
 while true; do
     echo ":: Waiting for changes in $SOURCE_DIR..."
 
-    # Wait for file system events
-    inotifywait -r -e "$EVENTS" --quiet "$SOURCE_DIR"
+    # Wait for file system events (FreeBSD: fswatch instead of inotifywait)
+    fswatch -r -1 "$SOURCE_DIR"
 
     # Debounce period
     sleep 1

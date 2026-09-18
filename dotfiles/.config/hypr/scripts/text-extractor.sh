@@ -34,15 +34,12 @@ _checkCommandExists() {
 
 check_deps
 
-# Arch
-if [[ $(_checkCommandExists "pacman") == 0 ]]; then
-    OCR_LANGUAGE_LIST="$(pacman -Qq | grep -iE "tesseract-(ocr|data|langpack)*-" | awk -F '-' '{print $NF}')"
-# Fedora
-elif [[ $(_checkCommandExists "dnf") == 0 ]]; then
-    OCR_LANGUAGE_LIST="$(dnf list --installed | grep -iE "tesseract-(ocr|data|langpack)*-" | awk -F '-' '{print $NF}')"
-# Opensuse
+# FreeBSD
+if [[ $(_checkCommandExists "pkg") == 0 ]]; then
+    OCR_LANGUAGE_LIST="$(pkg info -q 2>/dev/null | grep -iE '^tesseract-(data|ocr|langpack)-' | awk -F '-' '{print $NF}' | sort -u)"
+# Others
 else
-    OCR_LANGUAGE_LIST="$(zypper se -i | grep -iE "tesseract-(ocr|data|langpack)*-" | awk -F '-' '{print $NF}')"
+    OCR_LANGUAGE_LIST=""
 fi
 
 argc() { echo $#; }

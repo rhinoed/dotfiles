@@ -6,14 +6,12 @@
 
 # Path to the GTK settings file
 SETTINGS_FILE="$HOME/.config/gtk-3.0/settings.ini"
-SETTINGS_DIR="$HOME/.config/gtk-3.0"
-SETTINGS_BASENAME=$(basename "$SETTINGS_FILE")
 
-# Ensure inotify-tools is installed
-if ! command -v inotifywait &> /dev/null
+# Ensure fswatch is installed (inotifywait is Linux-only)
+if ! command -v fswatch &> /dev/null
 then
-    echo "Error: inotifywait is not installed."
-    echo "Please install inotify-tools (e.g., sudo apt install inotify-tools on Debian/Ubuntu)"
+    echo "Error: fswatch is not installed."
+    echo "Please install it (FreeBSD: pkg install fswatch)"
     exit 1
 fi
 
@@ -85,10 +83,8 @@ apply_theme() {
     fi
 }
 
-# Loop indefinitely, reading output from inotifywait
-inotifywait -m -q -e close_write,moved_to "$SETTINGS_DIR" | while read -r dir events filename; do
-    if [[ "$filename" == "$SETTINGS_BASENAME" ]]; then
-        echo "Change detected in $SETTINGS_FILE. Re-applying theme..."
-        apply_theme
-    fi
+# Loop indefinitely, reading output from fswatch (kqueue backend on FreeBSD)
+fswatch -0 --monitor=kqueue_monitor --event=Updated "$SETTINGS_FILE" | while IFS= read -r -d '' _path; do
+    echo "Change detected in $SETTINGS_FILE. Re-applying theme..."
+    apply_theme
 done

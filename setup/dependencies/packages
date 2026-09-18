@@ -1,51 +1,111 @@
+# ML4W OS - Dotfiles for Hyprland on FreeBSD 14.x / 15.x
+# FreeBSD pkg package names. Lines starting with # are ignored.
+#
+# NOTE: quickshell is available from the standard repo (0.3.0_1, confirmed).
+# awww is available on the 'latest' repo branch only (not quarterly).
+# If pkg reports it as missing, switch to latest:
+#   mkdir -p /usr/local/etc/pkg/repos
+#   echo 'FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest" }' > /usr/local/etc/pkg/repos/FreeBSD.conf
+
+# --- Core utilities ---
 wget
 curl
 git
 rsync
 unzip
-tar
 jq
-flatpak
 vim
-inotify-tools
-udisks2
-gvfs
-udiskie
+bash
+sudo
+gmake
+ccache
+ca_root_nss
+fswatch
+figlet
+gum
+fastfetch
+htop
+btop
+fzf
+eza
+zsh
+python3
+py-pip
+py-pipx
+py-gobject3
+py-screeninfo
+xclip
+rust
+
+# --- System / session ---
+elogind
+dbus
+polkit
+hyprpolkitagent
+sddm
+seatd
+drm-kmod
+# NOTE: NVIDIA users, install graphics/nvidia-driver and add the module
+# to kld_list (see setup/preflight-freebsd.sh).
+
+# --- Networking (FreeBSD-native: wpa_supplicant + ifconfig + dhclient) ---
+wifimgr
+# Blueman is optional and requires the FreeBSD Bluetooth stack setup.
+# blueman
+
+# --- Hyprland ecosystem ---
+hyprland
 hyprpaper
 hyprlock
 hypridle
 hyprpicker
+hyprsunset
+hyprshutdown
 xdg-desktop-portal-hyprland
-kitty
-vlc
+xdg-desktop-portal-gtk
+xwayland
 waybar
 rofi
+swaync
 nwg-look
-pavucontrol
-neovim
-blueman
-qt6ct
-nautilus
-gnome-text-editor
-firefox
-xdg-user-dirs
-xdg-desktop-portal-gtk
-figlet
-fastfetch
-htop
-xclip
-zsh
-fzf
-brightnessctl
-tumbler
-slurp
-cliphist
-gvfs
+nwg-displays
+quickshell
+awww
+hyprland-guiutils
+
+# --- Wayland tools ---
 grim
-breeze
-tesseract
+slurp
 wl-clipboard
-btop
-cargo
-eza
-libsecret
+cliphist
+pipewire
+wireplumber
+playerctl
+imagemagick
+tesseract
+# NOTE: Tesseract language data can be fetched with `pkg search tesseract`.
+
+# --- Desktop apps ---
+kitty
+vlc
+pavucontrol
+nautilus
+tumbler
+gnome-themes-extra
+breeze
+qt6ct
+qt6-wayland
+firefox
+
+# --- Storage ---
+udisks2
+gvfs
+py-udiskie
+
+# --- Fonts ---
+font-awesome
+noto-emoji
+nerd-fonts-jetbrainsmono
+nerd-fonts-firacode
+# Noto fonts for emoji fallback:
+# noto-basic

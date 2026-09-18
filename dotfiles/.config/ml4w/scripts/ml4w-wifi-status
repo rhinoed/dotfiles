@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# __  ______   ____
+# \ \/ /  _ \ / ___|
+#  \  /| | | | |  _
+#  /  \| |_| | |_| |
+# /_/\_\____/ \____|
+#
+
+# Report the FreeBSD wifi radio state: "enabled" or "disabled".
+# The wlan interface must be configured in /etc/rc.conf (e.g.
+# wlans_iwlwifi0="wlan0" wpa_supplicant_enable="YES").
+
+get_iface() {
+    ifconfig -l 2>/dev/null | tr ' ' '\n' | grep '^wlan' | head -n1
+}
+
+iface="$(get_iface)"
+if [ -z "$iface" ]; then
+    echo "disabled"
+    exit 0
+fi
+
+if ifconfig "$iface" 2>/dev/null | grep -q 'flags=[0-9].*<[^>]*\bUP\b'; then
+    echo "enabled"
+else
+    echo "disabled"
+fi
+exit 0

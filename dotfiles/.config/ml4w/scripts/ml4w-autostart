@@ -29,8 +29,8 @@ if [ ! -f $CACHE_FILE ]; then
     info "Cache file created"
 fi
 
-# Start nmapplet
-nm-applet --indicator &
+# FreeBSD: no NetworkManager/nm-applet. Wifi is managed by wpa_supplicant
+# and the wifimgr TUI (see ~/.config/ml4w/scripts/ml4w-network).
 
 # Quickshell reads its icon theme from QS_ICON_THEME, not from GTK. Hyprland
 # normally exports it (conf/environment.lua); fall back to reading the GTK

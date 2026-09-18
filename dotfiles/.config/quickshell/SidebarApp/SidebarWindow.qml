@@ -455,7 +455,7 @@ PanelWindow {
                                 value: 100
 
                                 Process {
-                                    command: ["bash", "-c", "brightnessctl -m | awk -F, '{gsub(\"%\",\"\",$4); print $4}'"]
+                                    command: ["bash", "-c", "~/.config/hypr/scripts/brightness.sh get -q"]
                                     running: root.isOpen
                                     stdout: StdioCollector {
                                         onStreamFinished: {
@@ -466,7 +466,7 @@ PanelWindow {
                                 }
 
                                 onMoved: {
-                                    Quickshell.execDetached(["bash", "-c", "brightnessctl set " + Math.round(value) + "%"])
+                                    Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/brightness.sh set " + Math.round(value)])
                                 }
 
                                 background: Rectangle {

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=ML4W OS - Hyprland (FreeBSD)
+Comment=ML4W OS Hyprland session for FreeBSD
+Exec=Hyprland
+Type=Application
+X-LightDM-DesktopName=Hyprland
+X-Ubuntu-Gettext-Domain=sddm

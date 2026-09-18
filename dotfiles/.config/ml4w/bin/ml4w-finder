@@ -4,9 +4,15 @@
 # CLI Fuzzy Finder
 # ------------------------------------------
 
-# --- 1. Generate List with find's internal type check ---
-# %y = type (d=dir, f=file), %p = path
-LIST=$(find -L . -maxdepth 4 -printf "%y %p\n" 2>/dev/null | awk '
+# --- 1. Generate List with a portable type check ---
+# FreeBSD: find has no -printf, so use stat(1) to classify each entry.
+LIST=$(find -L . -maxdepth 4 2>/dev/null | while IFS= read -r p; do
+    case "$(stat -f '%HT' "$p" 2>/dev/null)" in
+        Directory)     printf 'd %s\n' "$p" ;;
+        Regular\ File) printf 'f %s\n' "$p" ;;
+        *)             printf 'l %s\n' "$p" ;;
+    esac
+done | awk '
     $1 == "d" { print " " $2 }
     $1 == "f" { print "󰈚 " $2 }
     $1 == "l" { print " " $2 }

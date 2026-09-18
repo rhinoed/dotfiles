@@ -9,12 +9,11 @@ hl.on("hyprland.start", function ()
         f:close()
     end
 
-    -- Export variables to systemd
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    -- Export variables to D-Bus (FreeBSD/elogind: no systemd)
+    hl.exec_cmd("dbus-update-activation-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
 
-    -- Restart portals so they catch the environment
-    hl.exec_cmd("systemctl --user stop xdg-desktop-portal xdg-desktop-portal-hyprland")
-    hl.exec_cmd("systemctl --user start xdg-desktop-portal-hyprland xdg-desktop-portal")
+    -- Start pipewire/wireplumber and restart portals (FreeBSD helper)
+    hl.exec_cmd("~/.config/hypr/scripts/restart-portals.sh")
 
     -- awww daemon
     hl.exec_cmd("awww-daemon")
@@ -28,8 +27,8 @@ hl.on("hyprland.start", function ()
     -- Start waybar
     hl.exec_cmd(HOME .. "/.config/waybar/launch.sh")
 
-    -- Start polkit daemon
-    hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
+    -- Start polkit daemon (FreeBSD: hyprpolkitagent via helper)
+    hl.exec_cmd("~/.config/hypr/scripts/polkit-agent.sh")
 
     -- Restore wallpaper (skip for quickshell — handled inside ml4w-autostart)
     if wallpaper_app ~= "quickshell" then

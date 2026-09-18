@@ -5,16 +5,18 @@
 # /_//_/_/_/_/\_,_/ .__/ .__/_/\__/\__/
 #                /_/  /_/
 #
+# FreeBSD: toggles the wifimgr TUI in a floating terminal
+# (replaces the nm-applet toggle).
 if [[ "$1" == "stop" ]]; then
-    killall nm-applet
+    pkill -x wifimgr
 elif [[ "$1" == "toggle" ]]; then
-    if pgrep -x "nm-applet" >/dev/null; then
+    if pgrep -x wifimgr >/dev/null; then
         echo "Running"
-        killall nm-applet
+        pkill -x wifimgr
     else
         echo "Stopped"
-        nm-applet --indicator &
+        "$(cat ~/.config/ml4w/settings/terminal.sh 2>/dev/null || echo kitty)" --class dotfiles-floating -e wifimgr &
     fi
 else
-    nm-applet --indicator &
+    "$(cat ~/.config/ml4w/settings/terminal.sh 2>/dev/null || echo kitty)" --class dotfiles-floating -e wifimgr &
 fi

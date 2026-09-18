@@ -11,26 +11,6 @@ _checkCommandExists() {
     command -v "$1" &> /dev/null
 }
 
-_isInstalled() {
-    package="$1"
-    case $install_platform in
-        arch)
-            check="$($aur_helper -Qs --color always "${package}" | grep "local" | grep "${package} ")"
-            ;;
-        fedora)
-            check="$(dnf repoquery --quiet --installed ""${package}*"")"
-            ;;
-        *) ;;
-    esac
-
-    if [ -n "${check}" ]; then
-        echo 0 #'0' means 'true' in Bash
-        return #true
-    fi
-    echo 1 #'1' means 'false' in Bash
-    return #false
-}
-
 # ------------------------------------------------------
 # Confirm Start
 # ------------------------------------------------------
@@ -57,28 +37,9 @@ fi
 # Install update
 # ----------------------------------------------------- 
 
-# Arch
-if _checkCommandExists "pacman"; then
-
-    yay_installed="false"
-    paru_installed="false"
-    if _checkCommandExists "yay"; then
-        yay_installed="true"
-    fi
-    if _checkCommandExists "paru"; then
-        paru_installed="true"
-    fi
-    if [[ $yay_installed == "true" ]] && [[ $paru_installed == "false" ]]; then
-        yay
-    elif [[ $yay_installed == "false" ]] && [[ $paru_installed == "true" ]]; then
-        paru -Syu --noconfirm
-    else
-        sudo pacman -Syu --noconfirm
-    fi
-
-# Fedora
-elif _checkCommandExists "dnf"; then
-    sudo dnf upgrade
+# FreeBSD
+if _checkCommandExists "pkg"; then
+    sudo pkg upgrade -y
 else
     echo ":: ERROR - Platform not supported"
     echo "Press [ENTER] to close."
@@ -86,10 +47,12 @@ else
 fi
 echo
 
-# Flatpak
-echo ":: Searching for Flatpak updates..."
-flatpak update
-echo
+# Flatpak (optional)
+if _checkCommandExists "flatpak"; then
+    echo ":: Searching for Flatpak updates..."
+    flatpak update
+    echo
+fi
 
 # Reload Waybar
 pkill -RTMIN+1 waybar

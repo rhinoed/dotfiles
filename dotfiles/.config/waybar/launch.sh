@@ -97,12 +97,12 @@ _toggle_module() {
     if [ "$value" == "True" ]; then
         search_string=" \"$module_name\""
         if ! grep -qF "$search_string" "$file"; then
-            sed -i "s| //\"$module_name\"| \"$module_name\"|g" "$file"
+            sed -i '' "s| //\"$module_name\"| \"$module_name\"|g" "$file"
         fi
     else
         search_string=" //\"$module_name\""
         if ! grep -qF "$search_string" "$file"; then
-            sed -i "s| \"$module_name\"| //\"$module_name\"|g" "$file"
+            sed -i '' "s| \"$module_name\"| //\"$module_name\"|g" "$file"
         fi
     fi
 }

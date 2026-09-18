@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# __  ______   ____
+# \ \/ /  _ \ / ___|
+#  \  /| | | | |  _
+#  /  \| |_| | |_| |
+# /_/\_\____/ \____|
+#
+
+# FreeBSD wifi radio toggle (replaces NetworkManager nmcli radio).
+# The wlan interface must be configured in /etc/rc.conf (e.g.
+# wlans_iwlwifi0="wlan0" wpa_supplicant_enable="YES").
+# Usage: ml4w-wifi-toggle [on|off|toggle]
+
+get_iface() {
+    ifconfig -l 2>/dev/null | tr ' ' '\n' | grep '^wlan' | head -n1
+}
+
+current_state() {
+    local iface
+    iface="$(get_iface)"
+    if [ -z "$iface" ]; then
+        echo "disabled"
+    elif ifconfig "$iface" 2>/dev/null | grep -q 'flags=[0-9].*<[^>]*\bUP\b'; then
+        echo "enabled"
+    else
+        echo "disabled"
+    fi
+}
+
+set_state() {
+    local iface
+    iface="$(get_iface)"
+    if [ "$1" = "on" ]; then
+        if [ -n "$iface" ]; then
+            sudo ifconfig "$iface" up
+        fi
+        if ! pgrep -x wpa_supplicant >/dev/null 2>&1; then
+            sudo service wpa_supplicant onestart
+        fi
+    else
+        if [ -n "$iface" ]; then
+            sudo ifconfig "$iface" down
+        fi
+        sudo service wpa_supplicant onestop 2>/dev/null
+    fi
+}
+
+action="${1:-toggle}"
+case "$action" in
+    on|off)
+        set_state "$action"
+        ;;
+    toggle)
+        if [ "$(current_state)" = "enabled" ]; then
+            set_state off
+        else
+            set_state on
+        fi
+        ;;
+    *)
+        echo "Usage: ml4w-wifi-toggle [on|off|toggle]" >&2
+        exit 1
+        ;;
+esac
+
+current_state
+exit 0

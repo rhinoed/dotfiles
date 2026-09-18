@@ -24,7 +24,7 @@ if gum confirm "Do you really want to proceed?"; then
 
     # Create backup
     if [ -L $NVIM_DIR ]; then
-        local current_link_target=$(realpath -m "$NVIM_DIR")
+        current_link_target=$(realpath "$NVIM_DIR")
         cp -rf $current_link_target $BACKUP_DIR/
         rm $NVIM_DIR
         info "Backup created in folder $BACKUP_DIR"
@@ -37,13 +37,17 @@ if gum confirm "Do you really want to proceed?"; then
     fi
 
     # Prepare Temporary Folder
-    TEMP_DIR=$(mktemp -d -t ml4w-nvim-XXXXXX)
+    TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ml4w-nvim.XXXXXX")
     info "Cloning ML4W nvim configuration into $TEMP_DIR..."
     git clone --depth=1 https://github.com/mylinuxforwork/ml4w-nvim.git "$TEMP_DIR"
     cd "$TEMP_DIR"
     
     info "Installing ML4W nvim configuration to ~/.config..."
-    make install    
+    if command -v gmake >/dev/null 2>&1; then
+        gmake install
+    else
+        make install
+    fi
 
     # Cleanup
     rm -rf "$TEMP_DIR"

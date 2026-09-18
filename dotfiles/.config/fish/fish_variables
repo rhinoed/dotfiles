@@ -30,4 +30,4 @@ SETUVAR fish_pager_color_description:yellow\x1e\x2di
 SETUVAR fish_pager_color_prefix:normal\x1e\x2d\x2dbold\x1e\x2d\x2dunderline
 SETUVAR fish_pager_color_progress:brwhite\x1e\x2d\x2dbackground\x3dcyan
 SETUVAR fish_pager_color_selected_background:\x2dr
-SETUVAR fish_user_paths:/usr/lib/ccache/bin/\x20\x7e/\x2ecargo/bin/\x1e\x7e/\x2elocal/bin/
+SETUVAR fish_user_paths:/usr/local/libexec/ccache\x20\x7e/\x2ecargo/bin/\x1e\x7e/\x2elocal/bin/

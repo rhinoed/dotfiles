@@ -1,13 +1,14 @@
 {
-	"name": "ML4W OS - Dotfiles for Hyprland (ROLLING RELEASE)",
+	"name": "ML4W OS - Dotfiles for Hyprland (FreeBSD)",
 	"id": "com.ml4w.dotfiles",
-	"description": "Advanced configuration for the dynamic tiling window manager Hyprland.",
+	"description": "Advanced configuration for the dynamic tiling window manager Hyprland (FreeBSD 14.x/15.x).",
 	"version":"2.16",
 	"author": "Stephan Raabe",
 	"homepage": "https://ml4w.com/os/",
 	"dependencies": "https://ml4w.com/os/getting-started/dependencies",
 	"source": "https://github.com/mylinuxforwork/dotfiles.git",
 	"subfolder": "dotfiles",
+	"setupscript":"setup/setup.sh",
 	"restore":[
 		{
 			"title":"ML4W OS Settings",
