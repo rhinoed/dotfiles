@@ -30,7 +30,7 @@ fzf
 eza
 zsh
 python3
-py-pip
+# py-pip removed; use python3 -m ensurepip
 py-pipx
 py-gobject3
 py-screeninfo
@@ -92,15 +92,14 @@ pavucontrol
 nautilus
 tumbler
 gnome-themes-extra
-breeze
+breeze-icons
 qt6ct
 qt6-wayland
 firefox
 
 # --- Storage ---
-udisks2
-gvfs
-py-udiskie
+# udisks2
+# py-udiskie
 
 # --- Fonts ---
 font-awesome
