@@ -83,14 +83,26 @@ install_packages() {
     mapfile -t packages < <(grep -vE '^[[:space:]]*#|^[[:space:]]*$' "$pkg_list")
     info "Installing ${#packages[@]} packages with pkg"
 
-    # awww is only available on the 'latest' repo branch (not quarterly).
-    # If it is missing from the configured repos, enable 'latest' first.
-    $SUDO pkg update -q
-    if ! $SUDO pkg rquery '%n' awww 2>/dev/null | grep -qx awww; then
-        warn "awww is not in the current repo branch (quarterly). Enabling the 'latest' FreeBSD repo."
-        $SUDO mkdir -p /usr/local/etc/pkg/repos
-        echo 'FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest" }' | $SUDO tee /usr/local/etc/pkg/repos/FreeBSD.conf >/dev/null
-        $SUDO pkg update -f
+    # Only check for awww if it isn't already installed.
+    if ! $SUDO pkg info -e awww >/dev/null 2>&1; then
+        # awww is only available on the 'latest' repo branch.
+        # Instead of overwriting the default FreeBSD.conf, we add a low-priority
+        # latest repo to avoid breaking the system's quarterly branch.
+        if ! $SUDO pkg rquery '%n' awww 2>/dev/null | grep -qx awww; then
+            warn "awww is not in the current repo branch. Adding low-priority 'latest' repo."
+            $SUDO mkdir -p /usr/local/etc/pkg/repos
+            $SUDO sh -c "cat > /usr/local/etc/pkg/repos/FreeBSD-Latest.conf <<EOF
+FreeBSD-Latest: {
+  url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/latest\",
+  mirror_type: \"srv\",
+  signature_type: \"fingerprints\",
+  fingerprints: \"/usr/share/keys/pkg\",
+  enabled: yes,
+  priority: 0
+}
+EOF"
+            $SUDO pkg update -f
+        fi
     fi
 
     $SUDO pkg install -y "${packages[@]}"
