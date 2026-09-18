@@ -31,13 +31,14 @@ eza
 zsh
 python3
 # py-pip removed; use python3 -m ensurepip
-py-pipx
+py311-pipx
 py-gobject3
 py-screeninfo
 xclip
 rust
 
 # --- System / session ---
+# elogind is a core dependency; if it fails, try 'sudo pkg update -f'
 elogind
 dbus
 polkit
@@ -68,7 +69,7 @@ waybar
 rofi
 swaync
 nwg-look
-nwg-displays
+# nwg-displays is Linux-only
 quickshell
 awww
 hyprland-guiutils
@@ -90,7 +91,7 @@ kitty
 vlc
 pavucontrol
 nautilus
-tumbler
+# tumbler removed: not found in current repo branch
 gnome-themes-extra
 breeze-icons
 qt6ct
