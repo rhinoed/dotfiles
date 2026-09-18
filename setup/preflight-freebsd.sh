@@ -85,7 +85,7 @@ apply_pam() {
         info "pam_elogind already configured in $file"
     else
         info "Adding pam_elogind to $file"
-        $SUDO sh -c "printf 'session\toptional\tpam_elogind.so\n' >> ${file}"
+        $SUDO sh -c "printf 'session\toptional\t/usr/local/lib/security/pam_elogind.so\n' >> ${file}"
     fi
 }
 
