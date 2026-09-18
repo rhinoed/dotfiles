@@ -49,7 +49,9 @@ killall qs 2>/dev/null || true
 
 # Start Quickshell first
 info "Starting Quickshell"
-qs &
+qs > ~/.cache/ml4w/quickshell.log 2>&1 &
+# Log the PID for debugging
+echo "Quickshell PID: $!" >> ~/.cache/ml4w/quickshell.log
 
 # Wait for qs process to be ready, then let IPC initialize
 info "Waiting for Quickshell..."
