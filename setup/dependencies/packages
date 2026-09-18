@@ -31,7 +31,7 @@ eza
 zsh
 python3
 # py-pip removed; use python3 -m ensurepip
-pipx
+py312-pipx-1.15.0
 # py-gobject3 removed
 # py-screeninfo removed
 xclip
