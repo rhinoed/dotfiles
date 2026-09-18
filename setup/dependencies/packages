@@ -93,7 +93,7 @@ pavucontrol
 nautilus
 # tumbler removed: not found in current repo branch
 gnome-themes-extra
-breeze-icons
+kf6-breeze-icons-6.28.0
 qt6ct
 qt6-wayland
 firefox
