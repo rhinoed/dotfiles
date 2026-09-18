@@ -33,7 +33,7 @@ fi
 if command -v pipx &> /dev/null && ! command -v pywalfox &> /dev/null; then
     info "Installing pywalfox with pipx"
     pipx install pywalfox
-    pywalfox-install
+    pywalfox install
 fi
 
 # --------------------------------------------------------------
