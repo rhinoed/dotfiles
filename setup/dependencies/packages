@@ -31,15 +31,15 @@ eza
 zsh
 python3
 # py-pip removed; use python3 -m ensurepip
-py311-pipx
-py-gobject3
-py-screeninfo
+pipx
+# py-gobject3 removed
+# py-screeninfo removed
 xclip
 rust
 
 # --- System / session ---
 # elogind is a core dependency; if it fails, try 'sudo pkg update -f'
-elogind
+# elogind removed
 dbus
 polkit
 hyprpolkitagent
@@ -82,7 +82,7 @@ cliphist
 pipewire
 wireplumber
 playerctl
-imagemagick
+# imagemagick removed
 tesseract
 # NOTE: Tesseract language data can be fetched with `pkg search tesseract`.
 
