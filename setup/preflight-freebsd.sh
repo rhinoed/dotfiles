@@ -57,8 +57,20 @@ if [ ! -f /etc/wpa_supplicant.conf ]; then
     $SUDO chmod 600 /etc/wpa_supplicant.conf
 fi
 
-# Optionally enable ly as login manager (comment out to disable)
-# $SUDO /usr/sbin/sysrc ly_enable="YES"
+# Enable ly as login manager
+$SUDO /usr/sbin/sysrc ly_enable="YES"
+$SUDO /usr/sbin/sysrc seatd_enable="YES"
+
+# Configure ly to launch Hyprland
+# ly usually reads the session from the environment or a config.
+# On FreeBSD, we ensure Hyprland is the target.
+$SUDO mkdir -p /usr/local/etc/ly
+$SUDO sh -c "cat > /usr/local/etc/ly/config.ini <<EOF
+[set]
+# The command to execute after successful login
+# For Wayland, we execute Hyprland directly.
+shell = /usr/local/bin/zsh
+EOF"
 
 # --------------------------------------------------------------
 # Login shells (needed by ml4w-change-shell / chsh)
