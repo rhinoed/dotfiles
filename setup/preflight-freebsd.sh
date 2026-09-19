@@ -24,7 +24,7 @@ detect_gpu_kld() {
         esac
     fi
     if [ -z "$kld" ]; then
-        warn "No supported GPU found via pciconf. Add the matching drm module to kld_list manually."
+        warn "No supported GPU found via pciconf. Please add the matching drm module to kld_list manually (e.g., sudo sysrc kld_list+=\"nvidia-modeset\")"
         return
     fi
     if printf '%s\n' "$(/usr/sbin/sysrc -n kld_list 2>/dev/null)" | grep -qw "$kld"; then
@@ -77,10 +77,6 @@ done
 
 apply_pam() {
     local file="$1"
-    if [ ! -f "$file" ]; then
-        warn "PAM file not found, skipping: $file"
-        return
-    fi
     # Removed pam_elogind support as it is unstable on some FreeBSD setups
 }
 
