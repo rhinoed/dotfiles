@@ -2,6 +2,13 @@
 # INIT
 # -----------------------------------------------------
 
+# Start Hyprland if logging in via TTY1
+if status is-interactive
+    if test -z "$DISPLAY" -a (tty) = /dev/tty1
+        exec Hyprland
+    end
+end
+
 set -U fish_greeting ""
 
 # -----------------------------------------------------
