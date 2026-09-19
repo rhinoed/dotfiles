@@ -41,6 +41,7 @@ rust
 dbus
 polkit
 hyprpolkitagent
+ly
 seatd
 drm-kmod
 # NOTE: NVIDIA users, install graphics/nvidia-driver and add the module

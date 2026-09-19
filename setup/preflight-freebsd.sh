@@ -57,36 +57,12 @@ if [ ! -f /etc/wpa_supplicant.conf ]; then
     $SUDO chmod 600 /etc/wpa_supplicant.conf
 fi
 
-# Optionally enable greetd as login manager (comment out to disable)
-# $SUDO /usr/sbin/sysrc greetd_enable="YES"
+# Optionally enable ly as login manager (comment out to disable)
+# $SUDO /usr/sbin/sysrc ly_enable="YES"
 
 # --------------------------------------------------------------
-# greetd configuration
+# Login shells (needed by ml4w-change-shell / chsh)
 # --------------------------------------------------------------
-
-apply_greetd_config() {
-    info "Configuring greetd..."
-    local config_path="/usr/local/etc/greetd/greetd.conf"
-    
-    if [ ! -f "$config_path" ]; then
-        warn "greetd.conf not found, creating default"
-        $SUDO mkdir -p /usr/local/etc/greetd
-    fi
-
-    # We use tuigreet to launch Hyprland. 
-    # Note: greetd runs as 'greetd' user, so we use the --cmd flag to launch as the logged-in user.
-    local content="[terminal]
-default_session {
-    command = \"tuigreet --time --cmd Hyprland\"
-    user = \"greetd\"
-}"
-    $SUDO sh -c "cat > $config_path <<EOF
-$content
-EOF"
-}
-
-apply_greetd_config
-
 for shell in /usr/local/bin/bash /usr/local/bin/zsh /usr/local/bin/fish; do
     if [ -x "$shell" ] && ! grep -qx "$shell" /etc/shells 2>/dev/null; then
         info "Registering $shell in /etc/shells"
