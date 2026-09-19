@@ -31,7 +31,7 @@ eza
 zsh
 python3
 # py-pip removed; use python3 -m ensurepip
-py312-pipx-1.15.0
+py212-pipx-1.17.2
 # py-gobject3 removed
 # py-screeninfo removed
 xclip
@@ -91,7 +91,7 @@ pavucontrol
 nautilus
 # tumbler removed: not found in current repo branch
 gnome-themes-extra
-kf6-breeze-icons-6.28.0
+kf6-breeze-icons-6.30.0
 qt6ct
 qt6-wayland
 firefox
