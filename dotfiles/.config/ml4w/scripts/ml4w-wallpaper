@@ -134,7 +134,7 @@ run_matugen() {
 reload_waybar() {
     if pgrep -x waybar >/dev/null; then
         info "Waybar is currently running."
-        killall waybar || true
+        killall waybar 2>/dev/null || true
         sleep 0.5
     else
         info "Waybar not running"
@@ -146,17 +146,12 @@ reload_waybar() {
 
 reload_quickshell() {
     if pgrep -x qs >/dev/null; then
-        info "Sending reload IPC to Quickshell..."
-        # Try specific theme-manager reload
-        qs ipc call theme-manager reload > /tmp/qs-reload.log 2>&1
-        qs -p "$HOME/.local/share/ml4w-dotfiles-settings/quickshell" ipc call theme-manager reload >> /tmp/qs-reload.log 2>&1
-        
-        # Fallback: try a generic reload if that fails or doesn't exist
-        if ! grep -q "success" /tmp/qs-reload.log; then
-            info "Specific reload failed, trying generic reload..."
-            qs ipc call reload > /tmp/qs-reload.log 2>&1
-        fi
-        info "Quickshell theme updated (log: /tmp/qs-reload.log)"
+        info "Restarting Quickshell to apply theme..."
+        killall qs 2>/dev/null || true
+        sleep 0.5
+        nohup qs -p "$HOME/.local/share/ml4w-dotfiles-settings/quickshell" > /dev/null 2>&1 &
+        disown
+        info "Quickshell restarted"
     else
         warn "Quickshell not running, skipping theme reload"
     fi

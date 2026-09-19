@@ -43,7 +43,8 @@
   ],
   "widget-config": {
     "dnd": {
-      "text": "Do not Disturb"
+      "text": "Do not Disturb",
+      "update-command": "swaync-client -d -t"
     },
     "title": {
       "text": "Notifications",
@@ -82,6 +83,13 @@
           "active": true,
           "command": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
           "update-command": ""
+        },
+        {
+          "label": "󰑕",
+          "type": "toggle",
+          "active": true,
+          "command": "swaync-client -d -t",
+          "update-command": "swaync-client -d -t"
         },
         {
           "label": "",

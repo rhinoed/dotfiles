@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# FreeBSD volume update script for Waybar
+# Works with pipewire-pulse or native sndio
+
+get_volume() {
+    if command -v pactl >/dev/null 2>&1; then
+        pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | awk -F'[[/%]' '{print $2}' | head -1
+    elif command -v sndioctl >/dev/null 2>&1; then
+        sndioctl -q -v output.bar 2>/dev/null || echo "0"
+    else
+        echo "0"
+    fi
+}
+
+is_muted() {
+    if command -v pactl >/dev/null 2>&1; then
+        pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | grep -q "Yes"
+    elif command -v sndioctl >/dev/null 2>&1; then
+        sndioctl -q -v output.bar 2>/dev/null | grep -q "mute"
+    else
+        return 1
+    fi
+}
+
+VOLUME=$(get_volume)
+if is_muted; then
+    echo "  Muted"
+else
+    echo " ${VOLUME}%"
+fi

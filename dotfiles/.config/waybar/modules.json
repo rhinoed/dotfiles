@@ -365,29 +365,20 @@
     },
     "on-scroll-up": "true",
     "on-scroll-down": "true"
+},
+  // Volume (FreeBSD pipewire / native audio)
+  "custom/volume": {
+      "format": "{icon} {volume}%",
+      "format-muted": "  Muted",
+      "tooltip": true,
+      "exec": "~/.config/ml4w/scripts/ml4w-volume-update",
+      "interval": 3,
+      "on-click": "pavucontrol",
+      "format-icons": {
+          "headphone": "",
+          "default": ["", " "]
+      }
   },
-  // Pulseaudio
-  "pulseaudio": {
-    // "scroll-step": 1, // %, can be a float
-    "format": "{icon}  {volume}%",
-    "format-bluetooth": "{volume}% {icon} {format_source}",
-    "format-bluetooth-muted": " {icon} {format_source}",
-    "format-muted": " {format_source}",
-    "format-source": "{volume}% ",
-    "format-source-muted": "",
-    "format-icons": {
-      "headphone": " ",
-      "hands-free": " ",
-      "headset": " ",
-      "phone": " ",
-      "portable": " ",
-      "car": " ",
-      "default": [
-        "",
-        "",
-        ""
-      ]
-    },
     "on-click": "pavucontrol"
   },
   // Bluetooth
