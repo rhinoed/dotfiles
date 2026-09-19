@@ -42,7 +42,6 @@ detect_gpu_kld
 # --------------------------------------------------------------
 
 $SUDO /usr/sbin/sysrc dbus_enable="YES"
-$SUDO /usr/sbin/sysrc elogind_enable="YES"
 
 # --------------------------------------------------------------
 # Wifi (wpa_supplicant + wifimgr)
@@ -72,8 +71,9 @@ for shell in /usr/local/bin/bash /usr/local/bin/zsh /usr/local/bin/fish; do
 done
 
 # --------------------------------------------------------------
-# PAM - elogind session handling
+# PAM - session handling
 # --------------------------------------------------------------
+
 
 apply_pam() {
     local file="$1"
@@ -81,12 +81,7 @@ apply_pam() {
         warn "PAM file not found, skipping: $file"
         return
     fi
-    if grep -q 'pam_elogind' "$file" 2>/dev/null; then
-        info "pam_elogind already configured in $file"
-    else
-        info "Adding pam_elogind to $file"
-        $SUDO sh -c "printf 'session\toptional\t/usr/local/lib/security/pam_elogind.so\n' >> ${file}"
-    fi
+    # Removed pam_elogind support as it is unstable on some FreeBSD setups
 }
 
 apply_pam /etc/pam.d/system-session
