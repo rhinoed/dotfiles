@@ -43,9 +43,6 @@ detect_gpu_kld
 
 $SUDO /usr/sbin/sysrc dbus_enable="YES"
 
-# Disable SDDM (conflict with ly)
-$SUDO /usr/sbin/sysrc sddm_enable="NO"
-
 # --------------------------------------------------------------
 # Wifi (wpa_supplicant + wifimgr)
 # --------------------------------------------------------------

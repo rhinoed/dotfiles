@@ -1,0 +1,37 @@
+#!/bin/sh
+# Fix SDDM ML4W theme missing QtQuick.VirtualKeyboard modules
+# The ML4W theme requires QtVirtualKeyboard which may not be installed
+
+SDDM_THEMES="/usr/local/share/sddm/themes"
+ML4W_THEME="$SDDM_THEMES/ml4w"
+
+if [ -d "$ML4W_THEME" ]; then
+    echo "ML4W SDDM theme found at $ML4W_THEME"
+    echo ""
+    echo "Issue: The ml4w theme requires QtQuick.VirtualKeyboard modules."
+    echo "Options:"
+    echo ""
+    echo "1. Install Qt Virtual Keyboard modules:"
+    echo "   sudo pkg install qt6-virtualkeyboard"
+    echo ""
+    echo "2. Copy a working theme (breeze):"
+    echo "   sudo cp -r $SDDM_THEMES/breeze $SDDM_THEMES/ml4w-fallback"
+    echo "   sudo sed -i '' 's/ml4w/ml4w-fallback/g' /usr/local/etc/sddm.conf"
+    echo ""
+    echo "3. Create a minimal theme:"
+    echo "   sudo mkdir -p $SDDM_THEMES/minimal-qt6"
+    echo "   sudo cat > /usr/local/etc/sddm.conf << 'EOF'
+    [Theme]
+    Current=minimal-qt6
+    EOF"
+    echo ""
+    echo "Checking if qt6-virtualkeyboard is installed..."
+    if pkg info qt6-virtualkeyboard >/dev/null 2>&1; then
+        echo "✓ qt6-virtualkeyboard is installed"
+    else
+        echo "✗ qt6-virtualkeyboard is NOT installed"
+        echo "Run: sudo pkg install qt6-virtualkeyboard"
+    fi
+else
+    echo "ML4W SDDM theme not found at $ML4W_THEME"
+fi
