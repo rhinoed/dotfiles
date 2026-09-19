@@ -18,25 +18,17 @@ error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 REPO_DIR="$HOME/hyprland_config/ml4w/dotfiles"
 cd "$REPO_DIR" || error "Could not enter repo directory: $REPO_DIR"
 
-# Ensure upstream remote is configured
-if ! git remote | grep -q "upstream"; then
-    info "Configuring upstream remote..."
-    git remote add upstream https://github.com/mylinuxforwork/dotfiles.git || error "Failed to add upstream remote"
-fi
+# Ensure we are in the dotfiles root
+REPO_DIR="$HOME/hyprland_config/ml4w/dotfiles"
+cd "$REPO_DIR" || error "Could not enter repo directory: $REPO_DIR"
 
-# Fetch latest changes from upstream
-info "Fetching latest updates from upstream..."
-git fetch upstream main || error "Failed to fetch from upstream"
+# Update from the current remote (origin)
+info "Fetching latest updates from origin..."
+git fetch origin main || error "Failed to fetch from origin"
 
-# We must not simply 'git pull' or 'merge' because this is a FreeBSD fork.
-# A direct merge would overwrite FreeBSD-specific fixes with Linux ones.
-# Instead, we will use a selective merge or a rebase strategy.
-# For a user-friendly "update", we'll use 'git merge' but warn the user.
-
-info "Merging upstream changes into the FreeBSD fork..."
-# Using --no-commit to allow the user to see changes or handle conflicts manually
-if git merge upstream/main -m "Update from upstream" --no-edit; then
-    success "Successfully updated dotfiles from upstream!"
+info "Merging updates into the current branch..."
+if git merge origin/main -m "Update from remote" --no-edit; then
+    info "Successfully updated dotfiles from remote!"
 else
     error "Merge conflicts occurred. Please resolve them manually in the terminal."
 fi
