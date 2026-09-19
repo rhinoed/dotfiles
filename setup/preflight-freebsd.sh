@@ -43,6 +43,9 @@ detect_gpu_kld
 
 $SUDO /usr/sbin/sysrc dbus_enable="YES"
 
+# Disable SDDM (conflict with ly)
+$SUDO /usr/sbin/sysrc sddm_enable="NO"
+
 # --------------------------------------------------------------
 # Wifi (wpa_supplicant + wifimgr)
 # --------------------------------------------------------------
@@ -69,7 +72,11 @@ $SUDO sh -c "cat > /usr/local/etc/ly/config.ini <<EOF
 [set]
 # The command to execute after successful login
 # For Wayland, we execute Hyprland directly.
-shell = /usr/local/bin/zsh
+shell = /usr/local/bin/bash
+default_session = {
+    command = \"exec Hyprland\"
+    user = \"\$USER\"
+}
 EOF"
 
 # --------------------------------------------------------------
