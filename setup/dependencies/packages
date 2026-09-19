@@ -38,12 +38,9 @@ xclip
 rust
 
 # --- System / session ---
-# elogind is a core dependency; if it fails, try 'sudo pkg update -f'
-# elogind removed
 dbus
 polkit
 hyprpolkitagent
-sddm
 seatd
 drm-kmod
 # NOTE: NVIDIA users, install graphics/nvidia-driver and add the module
