@@ -338,8 +338,8 @@ FloatingWindow {
 
                     Image {
                         Layout.alignment: Qt.AlignHCenter
-                        source: "../shared/ml4w.svg"
-                        sourceSize.width: 100 
+                        source: "../shared/freebsd-logo.png"
+                        sourceSize.width: 100
                         sourceSize.height: 100
                         width: 100
                         height: 100

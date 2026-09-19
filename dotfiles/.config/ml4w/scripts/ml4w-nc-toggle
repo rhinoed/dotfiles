@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# FreeBSD-compatible toggles for swaync functionality
+# Usage: ml4w-nc <command>
+# Commands: toggle, dnd, state
+
+NC_SOCKET="$XDG_RUNTIME_DIR/swaync/client-input"
+
+toggle_notifications() {
+    if [ -S "$NC_SOCKET" ]; then
+        echo '{"action":"toggle"}' | socat - UNIX-CONNECT:"$NC_SOCKET"
+    else
+        # Fallback: toggle by killing and restarting swaync
+        pkill -x swaync 2>/dev/null || true
+        swaync &
+    fi
+}
+
+toggle_dnd() {
+    if [ -S "$NC_SOCKET" ]; then
+        echo '{"action":"dnd-toogle"}' | socat - UNIX-CONNECT:"$NC_SOCKET" 2>/dev/null
+    else
+        # Fallback: toggle dnd via dbus or file
+        if [ -f "$HOME/.config/swaync/dnd-state" ]; then
+            rm "$HOME/.config/swaync/dnd-state"
+        else
+            touch "$HOME/.config/swaync/dnd-state"
+        fi
+        pkill -x swaync 2>/dev/null || true
+        swaync &
+    fi
+}
+
+get_state() {
+    if [ -S "$NC_SOCKET" ]; then
+        echo '{"action":"get_state"}' | socat - UNIX-CONNECT:"$NC_SOCKET" 2>/dev/null | head -1
+    elif [ -f "$HOME/.config/swaync/dnd-state" ]; then
+        echo "dnd"
+    else
+        echo "normal"
+    fi
+}
+
+case "$1" in
+    toggle)
+        toggle_notifications
+        ;;
+    dnd)
+        toggle_dnd
+        ;;
+    state)
+        get_state
+        ;;
+    *)
+        echo "Usage: $0 {toggle|dnd|state}"
+        exit 1
+        ;;
+esac

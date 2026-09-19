@@ -14,21 +14,22 @@ BarButton {
         : "../shared/icons/bell.svg"
 
     onClicked: {
-        Quickshell.execDetached(["swaync-client", "-t", "-sw"])
+        Quickshell.execDetached(["bash", "-c", "~/.config/ml4w/scripts/ml4w-nc-toggle toggle"])
+        swaync.hasNotifications = false
     }
 
-    // Live notification count via swaync's waybar subscription, which emits a
-    // JSON line (e.g. {"text": "3", ...}) on every add/close event.
+    // Count notification files from swaync's notification cache
     Process {
         id: swayncProc
-        command: ["swaync-client", "-swb"]
+        command: ["bash", "-c", "ls ~/.cache/swaync/*.json 2>/dev/null | wc -l || echo 0"]
         running: true
         stdout: SplitParser {
             onRead: data => {
                 try {
-                    swaync.hasNotifications = parseInt(JSON.parse(data).text) > 0
+                    var count = parseInt(data.trim())
+                    swaync.hasNotifications = count > 0
                 } catch (e) {
-                    // Ignore malformed lines.
+                    swaync.hasNotifications = false
                 }
             }
         }
