@@ -27,9 +27,9 @@ detect_gpu_kld() {
         warn "No supported GPU found via pciconf. Please add the matching drm module to kld_list manually (e.g., sudo sysrc kld_list+=\"nvidia-modeset\")"
         return
     fi
-    if printf '%s\n' "$(/usr/sbin/sysrc -n kld_list 2>/dev/null)" | grep -qw "$kld"; then
-        info "kld_list already contains $kld"
-    else
+        if printf '%s\n' "$(/usr/sbin/sysrc -n kld_list 2>/dev/null)" | grep -q "$kld"; then
+            info "kld_list already contains $kld"
+        else
         info "Adding $kld to kld_list in /etc/rc.conf"
         $SUDO /usr/sbin/sysrc "kld_list+=\" $kld\""
     fi
