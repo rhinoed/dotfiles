@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# ============================================================
+# Update ML4W OS (FreeBSD Port)
+# ============================================================
+
+# Colors for UI
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+
+# Ensure we are in the dotfiles root
+REPO_DIR="$HOME/hyprland_config/ml4w/dotfiles"
+cd "$REPO_DIR" || error "Could not enter repo directory: $REPO_DIR"
+
+# Ensure upstream remote is configured
+if ! git remote | grep -q "upstream"; then
+    info "Configuring upstream remote..."
+    git remote add upstream https://github.com/mylinuxforwork/dotfiles.git || error "Failed to add upstream remote"
+fi
+
+# Fetch latest changes from upstream
+info "Fetching latest updates from upstream..."
+git fetch upstream main || error "Failed to fetch from upstream"
+
+# We must not simply 'git pull' or 'merge' because this is a FreeBSD fork.
+# A direct merge would overwrite FreeBSD-specific fixes with Linux ones.
+# Instead, we will use a selective merge or a rebase strategy.
+# For a user-friendly "update", we'll use 'git merge' but warn the user.
+
+info "Merging upstream changes into the FreeBSD fork..."
+# Using --no-commit to allow the user to see changes or handle conflicts manually
+if git merge upstream/main -m "Update from upstream" --no-edit; then
+    success "Successfully updated dotfiles from upstream!"
+else
+    error "Merge conflicts occurred. Please resolve them manually in the terminal."
+fi
+
+# After updating files, we should trigger a reload of the environment
+info "Reloading configuration..."
+hl.exec_cmd("~/.config/hypr/scripts/loadconfig.sh") 2>/dev/null || true
+hl.exec_cmd("~/.config/ml4w/scripts/ml4w-reload-statusbar") 2>/dev/null || true
+
+info "Update process complete."
