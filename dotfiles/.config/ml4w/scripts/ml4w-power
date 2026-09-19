@@ -2,7 +2,7 @@
 
 # 1. Define fallbacks as explicit functions to prevent quote-stripping issues
 lock_action()     { pidof hyprlock || hyprlock; }
-suspend_action()  { loginctl suspend 2>/dev/null || sudo zzz; }
+suspend_action()  { sudo zzz; }
 logout_action()   { hyprctl dispatch 'hl.dsp.exit()'; }
 reboot_action()   { sudo shutdown -r now; }
 poweroff_action() { sudo shutdown -p now; }

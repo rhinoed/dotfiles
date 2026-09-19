@@ -68,12 +68,12 @@ fi
 if [[ "$1" == "suspend" ]]; then
 	echo ":: Suspend"
 	sleep 0.5
-	loginctl suspend 2>/dev/null || sudo zzz
+	sudo zzz
 fi
 
 if [[ "$1" == "hibernate" ]]; then
 	echo ":: Hibernate"
 	# FreeBSD has no native hibernate; fall back to suspend (reply/resume).
 	sleep 1
-	sudo zzz 2>/dev/null || loginctl suspend
+	sudo zzz 2>/dev/null
 fi
