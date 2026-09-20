@@ -109,13 +109,27 @@ EOF"
 }
 
 install_dotfiles() {
-    info "Copying dotfiles to \$HOME"
-    mkdir -p "$HOME/.config" "$HOME/.local/bin"
-    rsync -a "$repo_path/dotfiles/.config/" "$HOME/.config/"
+    info "Linking and copying dotfiles to $HOME"
+    mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/share/ml4w-dotfiles-settings"
+
+    # Symlink core configuration directories for seamless development
+    local core_dirs=("ml4w" "hypr" "waybar" "matugen")
+    for dir in "${core_dirs[@]}"; do
+        ln -sfn "$repo_path/dotfiles/.config/$dir" "$HOME/.config/$dir"
+    done
+
+    # Symlink QuickShell settings
+    ln -sfn "$repo_path/dotfiles/.config/quickshell" "$HOME/.local/share/ml4w-dotfiles-settings/quickshell"
+
+    # Copy static files
     cp -f "$repo_path/dotfiles/.bashrc" "$HOME/.bashrc"
     cp -f "$repo_path/dotfiles/.zshrc" "$HOME/.zshrc"
     cp -f "$repo_path/dotfiles/.gtkrc-2.0" "$HOME/.gtkrc-2.0"
     cp -f "$repo_path/dotfiles/.Xresources" "$HOME/.Xresources"
+
+    # For other configs in .config, we still use rsync but avoid overwriting our symlinks
+    # We exclude the symlinked directories
+    rsync -a --exclude={"ml4w","hypr","waybar","matugen"} "$repo_path/dotfiles/.config/" "$HOME/.config/"
 }
 
 register_session() {
