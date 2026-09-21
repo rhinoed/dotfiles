@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
 
+# Ensure HYPRLAND_INSTANCE_SIGNATURE is set
+if [ -z "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+    # Attempt to find the signature in /tmp/hypr/
+    SIGNATURE=$(ls -1 /tmp/hypr/ | grep -E '^[0-9a-f]{16}$' | head -n 1)
+    if [ -n "$SIGNATURE" ]; then
+        export HYPRLAND_INSTANCE_SIGNATURE="$SIGNATURE"
+    else
+        echo "Error: Could not find Hyprland instance signature." >&2
+        exit 1
+    fi
+fi
+
 # Pipe the JSON stream directly through jq and awk, straight into rofi
-hyprctl binds -j | jq -c '.[] | select(.description != "")' | awk '
+hyprctl binds -j | jq -c '.[] | select(.description != \"\")' | awk '
 BEGIN {
     # Define modifier bits based on libxkbcommon
     mod_map[64] = "SUPER"
@@ -14,10 +26,10 @@ BEGIN {
     match($0, /"modmask":([0-9]+)/, m)
     modmask = m[1]
     
-    match($0, /"key":"([^"]+)"/, k)
+    match($0, /"key":"([^\"]+)"/, k)
     key = toupper(k[1])
     
-    match($0, /"description":"([^"]+)"/, d)
+    match($0, /"description":"([^\"]+)"/, d)
     desc = d[1]
 
     # Reconstruct modifier names from mask

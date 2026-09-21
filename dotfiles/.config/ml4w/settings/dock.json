@@ -1,7 +1,7 @@
 {
     "dock": {
         "enabled": true,
-        "autohide": false
+        "autohide": true
     },
     "apps": {
         "pinned": [
