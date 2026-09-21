@@ -1,36 +1,42 @@
 #!/usr/bin/env bash
 
-# Path to keybindings configuration
 BINDINGS_DIR="$HOME/.config/hypr/conf/keybindings"
-
-# Temporary file to store extracted binds
 TMP_BINDS=$(mktemp)
 
-# Parse all .lua files in the keybindings directory
-# We look for lines with hl.bind(..., { description = "..." })
+# Find all lines containing hl.bind
 grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
-    # Extract the key combination
-    # Matches the first argument of hl.bind: hl.bind("SUPER + RETURN", ...
-    if [[ $line =~ hl\.bind\(\"([^\"]+)\" ]]; then
-        combo="${BASH_REMATCH[1]}"
+    # 1. Extract the content inside the first set of parentheses of hl.bind(...)
+    # This regex grabs everything between the first ( and the first ,
+    if [[ $line =~ hl\.bind\(([^,]+) ]]; then
+        raw_combo="${BASH_REMATCH[1]}"
     else
         continue
     fi
 
-    # Extract the description
-    # Matches description = "..."
+    # 2. Clean up the combo string
+    # Remove quotes, remove "mainMod .. ", and trim whitespace
+    combo=$(echo "$raw_combo" | sed -E 's/mainMod\s*\.\.\s*//g; s/\"//g; s/^\s+//; s/\s+$//')
+
+    # 3. Extract the description
+    # Look for description = "..."
     if [[ $line =~ description\ =\ \"([^\"]+)\" ]]; then
         desc="${BASH_REMATCH[1]}"
     else
         desc="No description"
     fi
 
-    # Output in the format Rofi expects: Key \n ➔ Description \0
-    printf "%s\n➔ %s\0" "$combo" "$desc" >> "$TMP_BINDS"
+    # 4. If we found a combo, output it for Rofi
+    if [ -n "$combo" ]; then
+        # Substitute SUPER if mainMod was replaced but not specified (optional)
+        # Since we stripped mainMod, let's prepend SUPER if it looks like a shortcut
+        if [[ ! "$combo" =~ ^(SUPER|CTRL|ALT|SHIFT|XF86) ]]; then
+            combo="SUPER + $combo"
+        fi
+        printf "%s\n➔ %s\0" "$combo" "$desc" >> "$TMP_BINDS"
+    fi
 done
 
-# Launch Rofi using the extracted data
+# Launch Rofi
 cat "$TMP_BINDS" | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi
 
-# Cleanup
 rm "$TMP_BINDS"
