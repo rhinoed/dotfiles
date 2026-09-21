@@ -3,24 +3,47 @@
 BINDINGS_DIR="$HOME/.config/hypr/conf/keybindings"
 TMP_BINDS=$(mktemp)
 
-# Find all lines containing hl.bind
+# Parse all .lua files in the keybindings directory
 grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
-    # 1. Extract the content inside the first set of parentheses: hl.bind(...)
-    # Using bash regex to get the first argument
-    if [[ $line =~ hl\.bind\(([^,]+) ]]; then
+    # 1. Extract the key combination (1st arg)
+    if [[ $line =~ hl\.bind\(([^,]+), ]]; then
         raw_combo="${BASH_REMATCH[1]}"
     else
         continue
     fi
 
-    # 2. Clean up the combo string using Bash parameter expansion
-    # Remove quotes
+    # Clean up the combo string
     combo="${raw_combo//\"/}"
-    # Remove "mainMod .."
     combo="${combo//mainMod .. /}"
-    # Trim leading/trailing whitespace
     combo="${combo#"${combo%%[![:space:]]*}"}"
     combo="${combo%"${combo##*[![:space:]]}"}"
+    if [[ ! "$combo" =~ ^(SUPER|CTRL|ALT|SHIFT|XF86) ]]; then
+        combo="SUPER + $combo"
+    fi
+
+    # 2. Extract the command (2nd arg)
+    # This looks for the content between the first and second comma
+    if [[ $line =~ hl\.bind\([^,]+,\s*([^,]+), ]]; then
+        raw_cmd="${BASH_REMATCH[1]}"
+    else
+        continue
+    fi
+
+    # Clean up the command
+    # Handle hl.dsp.exec_cmd("...") or hl.dsp.focus(...)
+    if [[ "$raw_cmd" =~ hl\.dsp\.exec_cmd\(\"([^\"]+)\"\) ]]; then
+        cmd="${BASH_REMATCH[1]}"
+    elif [[ "$raw_cmd" =~ hl\.dsp\.window\.move\(\{.*workspace\ =\ ([0-9]+)\}.*\}\) ]]; then
+        # Example: move to workspace 1 -> hyprctl dispatch movetoworkspace 1
+        ws="${BASH_REMATCH[1]}"
+        cmd="hyprctl dispatch movetoworkspace $ws"
+    elif [[ "$raw_cmd" =~ hl\.dsp\.focus\(\{.*workspace\ =\ ([0-9]+)\}.*\}\) ]]; then
+        ws="${BASH_REMATCH[1]}"
+        cmd="hyprctl dispatch workspace $ws"
+    else
+        # Fallback: just use the raw string or a generic notification
+        cmd="echo 'Command not supported for direct execution'"
+    fi
 
     # 3. Extract the description
     if [[ $line =~ description\ =\ \"([^\"]+)\" ]]; then
@@ -29,16 +52,16 @@ grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
         desc="No description"
     fi
 
-    # 4. Final polish: if it starts with a common key but no modifier, assume SUPER
-    if [[ -n "$combo" ]]; then
-        if [[ ! "$combo" =~ ^(SUPER|CTRL|ALT|SHIFT|XF86) ]]; then
-            combo="SUPER + $combo"
-        fi
-        printf "%s\n➔ %s\0" "$combo" "$desc" >> "$TMP_BINDS"
-    fi
+    # Output: Label (for display) \0 Command (to be returned)
+    printf "%s - %s\0%s\0" "$combo" "$desc" "$cmd" >> "$TMP_BINDS"
 done
 
-# Launch Rofi
-cat "$TMP_BINDS" | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi
+# Launch Rofi and capture the selected command
+SELECTED_CMD=$(cat "$TMP_BINDS" | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi)
+
+# Execute the command if one was selected
+if [ -n "$SELECTED_CMD" ]; then
+    eval "$SELECTED_CMD" &
+fi
 
 rm "$TMP_BINDS"
