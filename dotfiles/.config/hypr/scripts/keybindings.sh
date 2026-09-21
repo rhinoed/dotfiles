@@ -5,30 +5,32 @@ TMP_BINDS=$(mktemp)
 
 # Find all lines containing hl.bind
 grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
-    # 1. Extract the content inside the first set of parentheses of hl.bind(...)
-    # This regex grabs everything between the first ( and the first ,
+    # 1. Extract the content inside the first set of parentheses: hl.bind(...)
+    # Using bash regex to get the first argument
     if [[ $line =~ hl\.bind\(([^,]+) ]]; then
         raw_combo="${BASH_REMATCH[1]}"
     else
         continue
     fi
 
-    # 2. Clean up the combo string
-    # Remove quotes, remove "mainMod .. ", and trim whitespace
-    combo=$(echo "$raw_combo" | sed -E 's/mainMod\s*\.\.\s*//g; s/\"//g; s/^\s+//; s/\s+$//')
+    # 2. Clean up the combo string using Bash parameter expansion
+    # Remove quotes
+    combo="${raw_combo//\"/}"
+    # Remove "mainMod .."
+    combo="${combo//mainMod .. /}"
+    # Trim leading/trailing whitespace
+    combo="${combo#"${combo%%[![:space:]]*}"}"
+    combo="${combo%"${combo##*[![:space:]]}"}"
 
     # 3. Extract the description
-    # Look for description = "..."
     if [[ $line =~ description\ =\ \"([^\"]+)\" ]]; then
         desc="${BASH_REMATCH[1]}"
     else
         desc="No description"
     fi
 
-    # 4. If we found a combo, output it for Rofi
-    if [ -n "$combo" ]; then
-        # Substitute SUPER if mainMod was replaced but not specified (optional)
-        # Since we stripped mainMod, let's prepend SUPER if it looks like a shortcut
+    # 4. Final polish: if it starts with a common key but no modifier, assume SUPER
+    if [[ -n "$combo" ]]; then
         if [[ ! "$combo" =~ ^(SUPER|CTRL|ALT|SHIFT|XF86) ]]; then
             combo="SUPER + $combo"
         fi
