@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# Detect Hyprland Instance Signature if not set
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+    SIGNATURE=$(ls -1 /tmp/hypr | grep -E "^[a-f0-9]{16}$" | head -n 1)
+    if [ -n "$SIGNATURE" ]; then
+        export HYPRLAND_INSTANCE_SIGNATURE="$SIGNATURE"
+    fi
+fi
 
 # Ensure HYPRLAND_INSTANCE_SIGNATURE is set
 if [ -z "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
