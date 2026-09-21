@@ -22,26 +22,22 @@ grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
     fi
 
     # 2. Extract the command (2nd arg)
-    # This looks for the content between the first and second comma
     if [[ $line =~ hl\.bind\([^,]+,\s*([^,]+), ]]; then
         raw_cmd="${BASH_REMATCH[1]}"
     else
         continue
     fi
 
-    # Clean up the command
-    # Handle hl.dsp.exec_cmd("...") or hl.dsp.focus(...)
+    # Clean up the command for execution
     if [[ "$raw_cmd" =~ hl\.dsp\.exec_cmd\(\"([^\"]+)\"\) ]]; then
         cmd="${BASH_REMATCH[1]}"
     elif [[ "$raw_cmd" =~ hl\.dsp\.window\.move\(\{.*workspace\ =\ ([0-9]+)\}.*\}\) ]]; then
-        # Example: move to workspace 1 -> hyprctl dispatch movetoworkspace 1
         ws="${BASH_REMATCH[1]}"
         cmd="hyprctl dispatch movetoworkspace $ws"
     elif [[ "$raw_cmd" =~ hl\.dsp\.focus\(\{.*workspace\ =\ ([0-9]+)\}.*\}\) ]]; then
         ws="${BASH_REMATCH[1]}"
         cmd="hyprctl dispatch workspace $ws"
     else
-        # Fallback: just use the raw string or a generic notification
         cmd="echo 'Command not supported for direct execution'"
     fi
 
@@ -52,11 +48,12 @@ grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
         desc="No description"
     fi
 
-    # Output: Label (for display) \0 Command (to be returned)
+    # Output: Label (Visible) \0 Command (Hidden)
+    # Removed the command from the label part
     printf "%s - %s\0%s\0" "$combo" "$desc" "$cmd" >> "$TMP_BINDS"
 done
 
-# Launch Rofi and capture the selected command
+# Launch Rofi and capture the selected hidden command
 SELECTED_CMD=$(cat "$TMP_BINDS" | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi)
 
 # Execute the command if one was selected
