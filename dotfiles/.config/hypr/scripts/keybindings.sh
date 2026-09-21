@@ -1,59 +1,36 @@
 #!/usr/bin/env bash
-# Detect Hyprland Instance Signature if not set
-if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
-    SIGNATURE=$(ls -1 /tmp/hypr | grep -E "^[a-f0-9]{16}$" | head -n 1)
-    if [ -n "$SIGNATURE" ]; then
-        export HYPRLAND_INSTANCE_SIGNATURE="$SIGNATURE"
-    fi
-fi
 
-# Ensure HYPRLAND_INSTANCE_SIGNATURE is set
-if [ -z "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
-    # Attempt to find the signature in /tmp/hypr/
-    SIGNATURE=$(ls -1 /tmp/hypr/ | grep -E '^[0-9a-f]{16}$' | head -n 1)
-    if [ -n "$SIGNATURE" ]; then
-        export HYPRLAND_INSTANCE_SIGNATURE="$SIGNATURE"
+# Path to keybindings configuration
+BINDINGS_DIR="$HOME/.config/hypr/conf/keybindings"
+
+# Temporary file to store extracted binds
+TMP_BINDS=$(mktemp)
+
+# Parse all .lua files in the keybindings directory
+# We look for lines with hl.bind(..., { description = "..." })
+grep -r "hl.bind" "$BINDINGS_DIR" --include="*.lua" | while read -r line; do
+    # Extract the key combination
+    # Matches the first argument of hl.bind: hl.bind("SUPER + RETURN", ...
+    if [[ $line =~ hl\.bind\(\"([^\"]+)\" ]]; then
+        combo="${BASH_REMATCH[1]}"
     else
-        echo "Error: Could not find Hyprland instance signature." >&2
-        exit 1
+        continue
     fi
-fi
 
-# Pipe the JSON stream directly through jq and awk, straight into rofi
-hyprctl binds -j | jq -c '.[] | select(.description != \"\")' | awk '
-BEGIN {
-    # Define modifier bits based on libxkbcommon
-    mod_map[64] = "SUPER"
-    mod_map[8]  = "ALT"
-    mod_map[4]  = "CTRL"
-    mod_map[1]  = "SHIFT"
-}
-{
-    # Extract values from jq JSON string
-    match($0, /"modmask":([0-9]+)/, m)
-    modmask = m[1]
-    
-    match($0, /"key":"([^\"]+)"/, k)
-    key = toupper(k[1])
-    
-    match($0, /"description":"([^\"]+)"/, d)
-    desc = d[1]
+    # Extract the description
+    # Matches description = "..."
+    if [[ $line =~ description\ =\ \"([^\"]+)\" ]]; then
+        desc="${BASH_REMATCH[1]}"
+    else
+        desc="No description"
+    fi
 
-    # Reconstruct modifier names from mask
-    mods = ""
-    for (bit in mod_map) {
-        if (and(modmask, bit)) {
-            mods = (mods == "" ? mod_map[bit] : mods " + " mod_map[bit])
-        }
-    }
+    # Output in the format Rofi expects: Key \n ➔ Description \0
+    printf "%s\n➔ %s\0" "$combo" "$desc" >> "$TMP_BINDS"
+done
 
-    # Format the key combination string
-    if (mods != "" && key != "") {
-        combo = mods " + " key
-    } else {
-        combo = (mods != "" ? mods : key)
-    }
+# Launch Rofi using the extracted data
+cat "$TMP_BINDS" | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi
 
-    # Output: Line 1 (Keys), Line 2 (Description), followed by the Null separator
-    printf "%s\n➔ %s\0", combo, desc
-}' | rofi -dmenu -i -replace -p "Keybinds" -sep '\0' -eh 2 -config ~/.config/rofi/config-compact.rasi
+# Cleanup
+rm "$TMP_BINDS"
